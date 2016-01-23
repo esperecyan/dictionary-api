@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>主に単語で答えるゲームにおける汎用的な辞書形式に関するAPI 動作デモ</title>
+	<link rel="stylesheet" href="./style.css" />
+	<link rel="icon" href="https://id.pokemori.jp/favicon.ico" />
+</head>
+<body>
+	<h1><a href="https://github.com/esperecyan/dictionary/blob/master/dictionary.md" target="_blank">主に単語で答えるゲームにおける汎用的な辞書形式</a>に関するAPI 動作デモ</h1>
+	
+	<form action="https://game.pokemori.jp/dictionary-api/v0/converter" method="POST" enctype="multipart/form-data">
+		<input name="MAX_FILE_SIZE" type="hidden" value="2097152" />
+		<label>
+			変換する辞書
+			<input name="input" type="file" accept="text/plain,text/csv,application/zip,.cfq,.dat,.txt,.csv" required="" />
+			(最大 2MiB)
+		</label>
+		<label>
+			変換後の辞書のタイトル
+			<input name="title" />
+			(省略可)
+		</label>
+		<label>
+			変換前の辞書の形式
+			<select name="from">
+				<option value="" selected="">自動判定</option>
+				<option>キャッチフィーリング</option>
+				<option>きゃっちま</option>
+				<option>Inteligenceω クイズ</option>
+				<option>Inteligenceω しりとり</option>
+				<option>汎用辞書</option>
+			</select>
+		</label>
+		<button>変換</button>
+	</form>
+	
+	<p id="json">
+		エラーが発生した場合はJSONファイルが表示 (またはダウンロード) されます。
+	</p>
+	<p>
+		CSV (カンマ区切りの値) ファイルはExcelに関連付けられている場合がありますが、
+		これはMicrosoft Officeのバグのようなもので、実際は<strong>ExcelでCSVファイルを開くことはできません</strong>
+		(正確には<a href="http://www.7key.jp/rfc/rfc4180.html" target="_blank">RFC4180</a>に準拠したCSVファイル)。
+	</p>
+	<p>
+		CSVファイルを開く際は、<a href="https://ja.libreoffice.org/download/libreoffice-fresh/" target="_blank">LibreOffice</a>
+		(または<a href="http://www.forest.impress.co.jp/library/software/openoffice/" target="_blank">Apache OpenOffice</a>) の
+		表計算ソフト「Calc」など、CSVに対応したソフトをご利用ください。
+		Microsoft Officeをインストールしている場合は、
+		前述のようなのソフトをインストールする際に *.docx や *.xlsx などの関連付けが上書きされないようにご注意ください
+		(インストール時に「カスタム」を選び「ファイルの種類」でチェックをすべて外す) 。
+	</p>
+</body>
+</html>
