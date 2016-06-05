@@ -6,10 +6,28 @@ namespace esperecyan\dictionary_api;
  */
 class ControllerTest extends \PHPUnit_Framework_TestCase
 {
-    use PreprocessingTrait;
-    
     /** @var int $_SERVER['CONTENT_LENGTH']未設定時の値。 */
     const CONTENT_LENGTH_DUMMY = 512;
+    
+    /**
+     * @param string $binary
+     * @return \ZipArchive
+     */
+    protected function generateArchive(string $binary = ''): \ZipArchive
+    {
+        $path = tempnam(sys_get_temp_dir(), 'php');
+        if ($binary !== '') {
+            file_put_contents($path, $binary);
+        }
+        register_shutdown_function(function () use ($path) {
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        });
+        $archive = new \ZipArchive();
+        $archive->open($path);
+        return $archive;
+    }
     
     /**
      * キーを無視して配列が配列に含まれるか調べる。
@@ -28,14 +46,19 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
      * @param string $inputFilePath
      * @param string $outputFilename
      * @param string $outputFilePath
+     * @param string|null $from
      * @dataProvider dictionaryProvider
      */
     public function testConstruct(
         string $inputFilename,
         string $inputFilePath,
         string $outputFilename,
-        string $outputFilePath
+        string $outputFilePath,
+        string $from = null
     ) {
+        if ($from) {
+            $_POST['from'] = $from;
+        }
         $inputFile = new \SplFileInfo(__DIR__ . "/resources/$inputFilePath");
         $_FILES['input'] = [
             'name' => $inputFilename,
@@ -70,7 +93,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
         $this->assertArraySubsetWithoutKey([
             'access-control-allow-origin: *',
             'content-type: '
-                . ($beenArchive ? 'application/zip' : 'text/csv; charset=utf-8; header=present'),
+                . ($beenArchive ? 'application/zip' : 'text/csv; charset=UTF-8; header=present'),
             'content-disposition: attachment; filename*=utf-8\'\'' . rawurlencode($outputFilename),
         ], xdebug_get_headers());
     }
@@ -119,6 +142,13 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 'generic-dictionary/formats-input.zip',
                 'ファイル形式.zip',
                 'generic-dictionary/formats-output-dictionary.csv',
+            ],
+            [
+                '東方原曲 (紅魔郷〜紺珠伝) ※CD限定の曲は含まず.txt',
+                'pictsense/touhou-musics-input.csv',
+                '東方原曲 (紅魔郷〜紺珠伝) ※CD限定の曲は含まず.csv',
+                'pictsense/touhou-musics-output.csv',
+                'ピクトセンス',
             ],
         ];
     }

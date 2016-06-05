@@ -1,6 +1,8 @@
 <?php
 namespace esperecyan\dictionary_api;
 
+use esperecyan\dictionary_php\{Parser, Serializer};
+use esperecyan\dictionary_php\exception\{SyntaxException, SerializeExceptionInterface};
 use bantu\IniGetWrapper\IniGetWrapper;
 
 class Controller
@@ -15,8 +17,13 @@ class Controller
             $parser = new Parser($this->getPostValue('from'), $_FILES['input']['name'], $this->getPostValue('title'));
             try {
                 $dictionary = $parser->parse($file);
-                (new serializer\GenericDictionarySerializer())->response($dictionary);
-            } catch (exception\SyntaxException $e) {
+                $outputFile = (new Serializer())->serialize($dictionary);
+                header("content-type: $outputFile[type]");
+                header('content-disposition: attachment; filename*=utf-8\'\'' . rawurlencode($outputFile['name']));
+                echo $outputFile['bytes'];
+            } catch (SyntaxException $e) {
+                $this->responseError(400, 'MalformedSyntax', $e->getMessage());
+            } catch (SerializeExceptionInterface $e) {
                 $this->responseError(400, 'MalformedSyntax', $e->getMessage());
             } catch (\Throwable $e) {
                 $this->responseError(500, 'InternalServerError', _('ファイルの変換に失敗しました。'));
