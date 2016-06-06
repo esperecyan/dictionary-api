@@ -19,7 +19,7 @@ class Controller
                 $dictionary = $parser->parse($file);
                 $outputFile = (new Serializer())->serialize($dictionary);
                 header("content-type: $outputFile[type]");
-                header('content-disposition: attachment; filename*=utf-8\'\'' . rawurlencode($outputFile['name']));
+                header('content-disposition: attachment; filename*=UTF-8\'\'' . rawurlencode($outputFile['name']));
                 echo $outputFile['bytes'];
             } catch (SyntaxException $e) {
                 $this->responseError(400, 'MalformedSyntax', $e->getMessage());
@@ -33,21 +33,21 @@ class Controller
     }
     
     /**
-     * 入力が確実にutf-8以外になる設定であれば真を返します。
+     * 入力が確実にUTF-8以外になる設定であれば真を返します。
      * @return bool
      */
     protected function inputIsNotUTF8(): bool
     {
-        return ini_get('mbstring.encoding_translation') === '1' && mb_strtolower(mb_internal_encoding()) !== 'utf-8';
+        return ini_get('mbstring.encoding_translation') === '1' && mb_internal_encoding() !== 'UTF-8';
     }
     
     /**
-     * 入力が確実にutf-8になる設定であれば真を返します。
+     * 入力が確実にUTF-8になる設定であれば真を返します。
      * @return bool
      */
     protected function inputIsUTF8(): bool
     {
-        return ini_get('mbstring.encoding_translation') === '1' && mb_strtolower(mb_internal_encoding()) === 'utf-8';
+        return ini_get('mbstring.encoding_translation') === '1' && mb_internal_encoding() === 'UTF-8';
     }
     
     /**
@@ -57,9 +57,9 @@ class Controller
      */
     protected function getPostValue(string $key)
     {
-        $convertedKey = $this->inputIsNotUTF8() ? mb_convert_encoding($key, mb_internal_encoding(), 'utf-8') : $key;
+        $convertedKey = $this->inputIsNotUTF8() ? mb_convert_encoding($key, mb_internal_encoding(), 'UTF-8') : $key;
         if (isset($_POST[$convertedKey]) && is_string($_POST[$convertedKey])) {
-            $value = $this->inputIsUTF8() ? $_POST[$key] : mb_convert_encoding($_POST[$key], 'utf-8');
+            $value = $this->inputIsUTF8() ? $_POST[$key] : mb_convert_encoding($_POST[$key], 'UTF-8');
             if ($value !== '') {
                 return $value;
             }
@@ -116,7 +116,7 @@ class Controller
             (new \ScriptFUSION\Byte\ByteFormatter())->format($this->getMaxFileBytes())
         );
         
-        $key = $this->inputIsNotUTF8() ? mb_convert_encoding('input', mb_internal_encoding(), 'utf-8') : 'input';
+        $key = $this->inputIsNotUTF8() ? mb_convert_encoding('input', mb_internal_encoding(), 'UTF-8') : 'input';
         if ($_SERVER['CONTENT_LENGTH'] > (new IniGetWrapper())->getBytes('post_max_size')) {
             $this->responseError(413, 'PayloadTooLarge', $bytesErrorMessage);
         } elseif (!isset($_FILES[$key]['error']) || !is_int($_FILES[$key]['error'])) {
@@ -145,7 +145,7 @@ class Controller
     protected function responseError(int $httpStatusCode, string $code, string $message)
     {
         header(
-            'content-type: application/json; charset=utf-8; profile=' . self::ERROR_SCHEMA_URL,
+            'content-type: application/json; charset=UTF-8; profile=' . self::ERROR_SCHEMA_URL,
             true,
             $httpStatusCode
         );

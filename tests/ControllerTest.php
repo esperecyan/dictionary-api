@@ -94,7 +94,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
             'access-control-allow-origin: *',
             'content-type: '
                 . ($beenArchive ? 'application/zip' : 'text/csv; charset=UTF-8; header=present'),
-            'content-disposition: attachment; filename*=utf-8\'\'' . rawurlencode($outputFilename),
+            'content-disposition: attachment; filename*=UTF-8\'\'' . rawurlencode($outputFilename),
         ], xdebug_get_headers());
     }
     
@@ -175,7 +175,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($statusCode, http_response_code() ?: 200);
         $this->assertArraySubsetWithoutKey([
             'access-control-allow-origin: *',
-            'content-type: application/json; charset=utf-8; profile=' . Controller::ERROR_SCHEMA_URL,
+            'content-type: application/json; charset=UTF-8; profile=' . Controller::ERROR_SCHEMA_URL,
         ], xdebug_get_headers());
     }
     
