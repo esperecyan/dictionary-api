@@ -35,18 +35,19 @@ https://game.pokemori.jp/dictionary-api/v0/converter
 | from  | 変換元の辞書形式。`キャッチフィーリング` `きゃっちま` `Inteligenceω クイズ` `Inteligenceω しりとり` `ピクトセンス` `汎用辞書` のいずれか。指定されていないか間違った値が指定されていれば、inputキーのファイル名から判断します。Inteligenceωについては、コメント行、空行を除く最初の行が `Q,` で始まるか否かで、クイズとしりとりを判別します。 |
 
 ### エラー
-4xxクラス、または5xxクラスのHTTPステータスコード、およびJSONスキーマ[error-schema.json]で示される形式でエラーの説明を返します。
+4xxクラス、または5xxクラスのHTTPステータスコード、および[application/problem+json]形式でエラーの説明を返します。
 
-| ステータスコード | エラーコード        | 説明                                                                         |
-|------------------|---------------------|------------------------------------------------------------------------------|
-| [400]            | MalformedRequest    | inputキーで辞書ファイルが与えられなかった場合。                              |
-| [400]            | MalformedSyntax     | 指定された形式を想定した構文解析に失敗したことを表します。                   |
-| [405]            | MethodNotAllowed    | POST以外のメソッドでリクエストした場合。                                     |
-| [501]            | NotImplemented      | 〃                                                                           |
-| [413]            | PayloadTooLarge     | POSTしたファイル、またはPOSTデータ全体のファイルが大き過ぎることを表します。 |
-| [500]            | InternalServerError | サーバー側の設定ミスなどに起因するエラー。                                   |
+| type                                                                         | title                 | status | 原因                                                                         |
+|------------------------------------------------------------------------------|-----------------------|--------|------------------------------------------------------------------------------|
+| https://github.com/esperecyan/dictionary-api/blob/master/malformed-syntax.md | Malformed Syntax      |[400]   | 指定された形式を想定した構文解析に失敗したことを表します。                   |
+| https://github.com/esperecyan/dictionary-api/blob/master/serialize-error.md  | Serialize Error       |[400]   | 指定された形式へ直列化できる辞書ではなかったことを表します。                 |
+| about:blank                                                                  | Bad Request           |[400]   | inputキーで辞書ファイルが与えられなかった場合。                              |
+| about:blank                                                                  | Method Not Allowed    |[405]   | POST以外のメソッドでリクエストした場合。                                     |
+| about:blank                                                                  | Not Implemented       |[501]   | 〃                                                                           |
+| about:blank                                                                  | Payload Too Large     |[413]   | POSTしたファイル、またはPOSTデータ全体のファイルが大き過ぎることを表します。 |
+| about:blank                                                                  | Internal Server Error |[500]   | サーバー側の設定ミスなどに起因するエラー。                                   |
 
-[error-schema.json]: error-schema.json
+[application/problem+json]: https://tools.ietf.org/html/rfc7807 "Problem Details for HTTP APIs"
 [400]: https://triple-underscore.github.io/RFC7231-ja.html#status.400
 [405]: https://triple-underscore.github.io/RFC7231-ja.html#status.405
 [501]: https://triple-underscore.github.io/RFC7231-ja.html#status.501

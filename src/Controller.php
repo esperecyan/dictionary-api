@@ -7,9 +7,6 @@ use bantu\IniGetWrapper\IniGetWrapper;
 
 class Controller
 {
-    /** @var string */
-    const ERROR_SCHEMA_URL = 'https://raw.githubusercontent.com/esperecyan/dictionary-api/master/error-schema.json';
-    
     public function __construct()
     {
         header('access-control-allow-origin: *');
@@ -22,11 +19,25 @@ class Controller
                 header('content-disposition: attachment; filename*=UTF-8\'\'' . rawurlencode($outputFile['name']));
                 echo $outputFile['bytes'];
             } catch (SyntaxException $e) {
-                $this->responseError(400, 'MalformedSyntax', $e->getMessage());
+                $this->responseError([
+                    'type' => 'https://github.com/esperecyan/dictionary-api/blob/master/malformed-syntax.md',
+                    'title' => 'Malformed Syntax',
+                    'status' => 400,
+                    'detail' => $e->getMessage(),
+                ]);
             } catch (SerializeExceptionInterface $e) {
-                $this->responseError(400, 'MalformedSyntax', $e->getMessage());
+                $this->responseError([
+                    'type' => 'https://github.com/esperecyan/dictionary-api/blob/master/serialize-error.md',
+                    'title' => 'Serialize Error',
+                    'status' => 400,
+                    'detail' => $e->getMessage(),
+                ]);
             } catch (\Throwable $e) {
-                $this->responseError(500, 'InternalServerError', _('ファイルの変換に失敗しました。'));
+                $this->responseError([
+                    'title' => 'Internal Server Error',
+                    'status' => 500,
+                    'detail' => _('ファイルの変換に失敗しました。'),
+                ]);
                 throw $e;
             }
         }
@@ -83,10 +94,18 @@ class Controller
             case 'PUT':
             case 'DELETE':
                 header('allow: POST');
-                $this->responseError(405, 'MethodNotAllowed', sprintf(_('%sメソッドは利用できません。POSTメソッドを使用してください。'), $method));
+                $this->responseError([
+                    'title' => 'Method Not Allowed',
+                    'status' => 405,
+                    'detail' => sprintf(_('%sメソッドは利用できません。POSTメソッドを使用してください。'), $method),
+                ]);
                 break;
             default:
-                $this->responseError(501, 'NotImplemented', sprintf(_('%sメソッドは利用できません。POSTメソッドを使用してください。'), $method));
+                $this->responseError([
+                    'title' => 'Not Implemented',
+                    'status' => 501,
+                    'detail' => sprintf(_('%sメソッドは利用できません。POSTメソッドを使用してください。'), $method),
+                ]);
         }
         return $valid;
     }
@@ -118,17 +137,33 @@ class Controller
         
         $key = $this->inputIsNotUTF8() ? mb_convert_encoding('input', mb_internal_encoding(), 'UTF-8') : 'input';
         if ($_SERVER['CONTENT_LENGTH'] > (new IniGetWrapper())->getBytes('post_max_size')) {
-            $this->responseError(413, 'PayloadTooLarge', $bytesErrorMessage);
+            $this->responseError([
+                'title' => 'Payload Too Large',
+                'status' => 413,
+                'detail' => $bytesErrorMessage,
+            ]);
         } elseif (!isset($_FILES[$key]['error']) || !is_int($_FILES[$key]['error'])) {
-            $this->responseError(400, 'MalformedRequest', _('inputキーで辞書ファイルを送信してください。'));
+            $this->responseError([
+                'title' => 'Bad Request',
+                'status' => 400,
+                'detail' => _('inputキーで辞書ファイルを送信してください。'),
+            ]);
         } elseif ($_FILES[$key]['error'] !== UPLOAD_ERR_OK) {
             if (in_array(
                 $_FILES[$key]['error'],
                 [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE, UPLOAD_ERR_PARTIAL, UPLOAD_ERR_NO_FILE]
             )) {
-                $this->responseError(413, 'PayloadTooLarge', $bytesErrorMessage);
+                $this->responseError([
+                    'title' => 'Payload Too Large',
+                    'status' => 413,
+                    'detail' => $bytesErrorMessage,
+                ]);
             } else {
-                $this->responseError(500, 'InternalServerError', _('ファイルのアップロードに失敗しました。'));
+                $this->responseError([
+                    'title' => 'Internal Server Error',
+                    'status' => 500,
+                    'detail' => _('ファイルのアップロードに失敗しました。'),
+                ]);
                 throw new \LogicException('ファイルのアップロードに関するエラーが発生しました。エラーコード: '. $_FILES[$key]['error']);
             }
         } else {
@@ -138,23 +173,11 @@ class Controller
     
     /**
      * HTTPステータスコードを設定し、エラーメッセージをJSONで出力します。
-     * @param int $httpStatusCode
-     * @param string $code
-     * @param string $message
+     * @param (string|int)[] $problemdetail
      */
-    protected function responseError(int $httpStatusCode, string $code, string $message)
+    protected function responseError(array $problemdetail)
     {
-        header(
-            'content-type: application/json; charset=UTF-8; profile=' . self::ERROR_SCHEMA_URL,
-            true,
-            $httpStatusCode
-        );
-        
-        echo json_encode([
-            [
-                'code' => $code,
-                'messages' => [$message],
-            ],
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        header('content-type: application/problem+json; charset=UTF-8', true, $problemdetail['status']);
+        echo json_encode($problemdetail, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 }

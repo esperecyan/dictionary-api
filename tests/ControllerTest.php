@@ -155,15 +155,21 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
     
     /**
      * @param string $type
-     * @param int $statusCode
+     * @param string $title
+     * @param int $status
      * @param bool $checkingLogicException
      */
-    private function errorCommonTest(string $type, int $statusCode, bool $checkingLogicException = false)
+    private function errorCommonTest(string $type, string $title, int $status, bool $checkingLogicException = false)
     {
         if (empty($_SERVER['CONTENT_LENGTH'])) {
             $_SERVER['CONTENT_LENGTH'] = 512;
         }
-        $this->expectOutputRegex('/"' . preg_quote($type, '/') . '"/u');
+        $this->expectOutputRegex('#^{' . ($type === 'about:blank' ? '' : "\n    \"type\": \"$type\",") . "
+    \"title\": \"$title\",
+    \"status\": $status,
+    \"detail\": \".+\"
+}$#u");
+        
         if ($checkingLogicException) {
             try {
                 new Controller();
@@ -172,10 +178,10 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
         } else {
             new Controller();
         }
-        $this->assertSame($statusCode, http_response_code() ?: 200);
+        $this->assertSame($status, http_response_code() ?: 200);
         $this->assertArraySubsetWithoutKey([
             'access-control-allow-origin: *',
-            'content-type: application/json; charset=UTF-8; profile=' . Controller::ERROR_SCHEMA_URL,
+            'content-type: application/problem+json; charset=UTF-8',
         ], xdebug_get_headers());
     }
     
@@ -191,16 +197,16 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
     
     /**
      * @param (string|int|(string|int)[])[][] $overwritingArray
-     * @dataProvider malformedRequestProvider
+     * @dataProvider badRequestProvider
      */
-    public function testMalformedRequest(array $overwritingArray)
+    public function testBadRequest(array $overwritingArray)
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $this->mergeToSuperglobals($overwritingArray);
-        $this->errorCommonTest('MalformedRequest', 400);
+        $this->errorCommonTest('about:blank', 'Bad Request', 400);
     }
     
-    public function malformedRequestProvider(): array
+    public function badRequestProvider(): array
     {
         return [
             [[]],
@@ -267,7 +273,11 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
             'error' => UPLOAD_ERR_OK,
             'size' => $fileInfo->getSize(),
         ];
-        $this->errorCommonTest('MalformedSyntax', 400);
+        $this->errorCommonTest(
+            'https://github.com/esperecyan/dictionary-api/blob/master/malformed-syntax.md',
+            'Malformed Syntax',
+            400
+        );
     }
     
     public function malformedSyntaxProvider(): array
@@ -295,7 +305,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
     public function testMethodNotAllowed(string $method)
     {
         $_SERVER['REQUEST_METHOD'] = $method;
-        $this->errorCommonTest('MethodNotAllowed', 405);
+        $this->errorCommonTest('about:blank', 'Method Not Allowed', 405);
         $this->assertContains('allow: POST', xdebug_get_headers());
     }
     
@@ -316,7 +326,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
     public function testNotImplemented(string $method)
     {
         $_SERVER['REQUEST_METHOD'] = $method;
-        $this->errorCommonTest('NotImplemented', 501);
+        $this->errorCommonTest('about:blank', 'Not Implemented', 501);
     }
     
     public function notImplementedProvider(): array
@@ -338,7 +348,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $this->mergeToSuperglobals($overwritingArray);
-        $this->errorCommonTest('PayloadTooLarge', 413);
+        $this->errorCommonTest('about:blank', 'Payload Too Large', 413);
     }
     
     public function payloadTooLargeProvider(): array
@@ -397,7 +407,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
     {
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $this->mergeToSuperglobals($overwritingArray);
-        $this->errorCommonTest('InternalServerError', 500, true);
+        $this->errorCommonTest('about:blank', 'Internal Server Error', 500, true);
     }
     
     public function internalServerErrorProvider(): array
