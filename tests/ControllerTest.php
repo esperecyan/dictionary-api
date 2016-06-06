@@ -46,7 +46,9 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
      * @param string $inputFilePath
      * @param string $outputFilename
      * @param string $outputFilePath
+     * @param string $contentType
      * @param string|null $from
+     * @param string|null $to
      * @dataProvider dictionaryProvider
      */
     public function testConstruct(
@@ -54,10 +56,15 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
         string $inputFilePath,
         string $outputFilename,
         string $outputFilePath,
-        string $from = null
+        string $contentType,
+        string $from = null,
+        string $to = null
     ) {
         if ($from) {
             $_POST['from'] = $from;
+        }
+        if ($to) {
+            $_POST['to'] = $to;
         }
         $inputFile = new \SplFileInfo(__DIR__ . "/resources/$inputFilePath");
         $_FILES['input'] = [
@@ -70,9 +77,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
         $_SERVER['CONTENT_LENGTH'] = $inputFile->getSize();
         $_SERVER['REQUEST_METHOD'] = 'POST';
         
-        $beenArchive = pathinfo($inputFilePath, PATHINFO_EXTENSION) === 'zip';
-        
-        if ($beenArchive) {
+        if ($contentType === 'application/zip') {
             ob_start();
             new Controller();
             if (http_response_code()) {
@@ -92,8 +97,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(200, http_response_code() ?: 200);
         $this->assertArraySubsetWithoutKey([
             'access-control-allow-origin: *',
-            'content-type: '
-                . ($beenArchive ? 'application/zip' : 'text/csv; charset=UTF-8; header=present'),
+            "content-type: $contentType",
             'content-disposition: attachment; filename*=UTF-8\'\'' . rawurlencode($outputFilename),
         ], xdebug_get_headers());
     }
@@ -106,48 +110,83 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 'catchfeeling/kanji-input.cfq',
                 '漢字.csv',
                 'catchfeeling/kanji-output.csv',
+                'text/csv; charset=UTF-8; header=present',
             ],
             [
                 '純粋な東方キャラ大辞典 ver.5 [語数 191] [作成者 幽燐, 100の人].cfq',
                 'catchfeeling/touhou-input.cfq',
                 '純粋な東方キャラ大辞典 ver．5.csv',
                 'catchfeeling/touhou-output.csv',
+                'text/csv; charset=UTF-8; header=present',
+            ],
+            [
+                '純粋な東方キャラ大辞典 ver.5 [語数 191] [作成者 幽燐, 100の人].cfq',
+                'catchfeeling/touhou-input.cfq',
+                '純粋な東方キャラ大辞典 ver．5.csv',
+                'catchfeeling/touhou-pictsense.csv',
+                'text/csv; charset=UTF-8; header=absent',
+                null,
+                'ピクトセンス',
             ],
             [
                 '英単語 [語数 26] [作成者 100の人].cfq',
                 'catchfeeling/english-input.cfq',
                 '英単語.csv',
                 'catchfeeling/english-output.csv',
+                'text/csv; charset=UTF-8; header=present',
             ],
             [
                 '純粋な東方キャラ大辞典 ver.5 [語数 191] [作成者 幽燐, 100の人].dat',
                 'catchm/touhou-input.dat',
                 '純粋な東方キャラ大辞典 ver．5 [語数 191] [作成者 幽燐, 100の人].csv',
                 'catchm/touhou-output.csv',
+                'text/csv; charset=UTF-8; header=present',
+            ],
+            [
+                '純粋な東方キャラ大辞典 ver.5 [語数 191] [作成者 幽燐, 100の人].dat',
+                'catchm/touhou-input.dat',
+                '純粋な東方キャラ大辞典 ver．5 [語数 191] [作成者 幽燐, 100の人] [語数 191].cfq',
+                'catchm/touhou-catchfeeling.cfq',
+                'text/plain; charset=Shift_JIS',
+                null,
+                'キャッチフィーリング',
             ],
             [
                 'しりとりサンプル.txt',
                 'inteligenceo/shiritori-input.txt',
                 'しりとりサンプル.csv',
                 'inteligenceo/shiritori-output.csv',
+                'text/csv; charset=UTF-8; header=present',
             ],
             [
                 'クイズサンプル.txt',
                 'inteligenceo/quiz-input.txt',
                 'クイズサンプル.csv',
                 'inteligenceo/quiz-output.csv',
+                'text/csv; charset=UTF-8; header=present',
+            ],
+            [
+                'クイズサンプル.txt',
+                'inteligenceo/quiz-input.txt',
+                'クイズサンプル.txt',
+                'inteligenceo/quiz-shiritori.txt',
+                'text/plain; charset=Shift_JIS',
+                null,
+                'Inteligenceω しりとり',
             ],
             [
                 'ファイル形式.csv',
                 'generic-dictionary/formats-input.zip',
                 'ファイル形式.zip',
                 'generic-dictionary/formats-output-dictionary.csv',
+                'application/zip',
             ],
             [
                 '東方原曲 (紅魔郷〜紺珠伝) ※CD限定の曲は含まず.txt',
                 'pictsense/touhou-musics-input.csv',
                 '東方原曲 (紅魔郷〜紺珠伝) ※CD限定の曲は含まず.csv',
                 'pictsense/touhou-musics-output.csv',
+                'text/csv; charset=UTF-8; header=present',
                 'ピクトセンス',
             ],
         ];
@@ -294,6 +333,47 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
             [
                 'resources/dummy.zip',
                 'dictionary.cfq',
+            ],
+        ];
+    }
+    
+    /**
+     * @param string $path
+     * @param string $filename
+     * @param string $to
+     * @dataProvider serializeErrorProvider
+     */
+    public function testSerializeError(string $path, string $filename, string $to)
+    {
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_POST['to'] = $to;
+        $fileInfo = new \SplFileInfo(__DIR__ . "/$path");
+        $_FILES['input'] = [
+            'name' => $filename,
+            'type' => '',
+            'tmp_name' => $fileInfo->getRealPath(),
+            'error' => UPLOAD_ERR_OK,
+            'size' => $fileInfo->getSize(),
+        ];
+        $this->errorCommonTest(
+            'https://github.com/esperecyan/dictionary-api/blob/master/serialize-error.md',
+            'Serialize Error',
+            400
+        );
+    }
+    
+    public function serializeErrorProvider(): array
+    {
+        return [
+            [
+                'resources/catchfeeling/kanji-input.cfq',
+                '漢字.cfq',
+                'ピクトセンス',
+            ],
+            [
+                'resources/inteligenceo/selections.txt',
+                '記述問題が無い.txt',
+                'キャッチフィーリング',
             ],
         ];
     }

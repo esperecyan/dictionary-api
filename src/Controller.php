@@ -14,7 +14,7 @@ class Controller
             $parser = new Parser($this->getPostValue('from'), $_FILES['input']['name'], $this->getPostValue('title'));
             try {
                 $dictionary = $parser->parse($file);
-                $outputFile = (new Serializer())->serialize($dictionary);
+                $outputFile = (new Serializer($this->getPostValue('to') ?? '汎用辞書'))->serialize($dictionary);
                 header("content-type: $outputFile[type]");
                 header('content-disposition: attachment; filename*=UTF-8\'\'' . rawurlencode($outputFile['name']));
                 echo $outputFile['bytes'];
