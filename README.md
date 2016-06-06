@@ -12,11 +12,11 @@ Inteligenceωの辞書で画像・音声ファイルへのパスが含まれる�
 汎用辞書形式のZIPファイルをPOSTした場合を除き、当APIはCSVファイルのみを返し、ZIPファイル化などは行いません。
 
 [主に単語で答えるゲームにおける汎用的な辞書形式]: https://github.com/esperecyan/dictionary/blob/master/dictionary.md
-[キャッチフィーリング]: https://secure.pokemori.jp/catchfeeling-runtime
+[キャッチフィーリング]: http://forest.watch.impress.co.jp/library/software/catchfeeling/
 [Drawing Catch]: http://drafly.nazo.cc/games/olds/DC
 [きゃっちま]: http://vodka-catchm.seesaa.net/article/115922159.html
 [ピクトセンス]: http://pictsense.com/
-[Inteligenceω]: http://page.freett.com/loxteam/inteli.htm
+[Inteligenceω]: http://loxee.web.fc2.com/inteli.html
 
 動作デモ
 --------
@@ -47,11 +47,11 @@ https://game.pokemori.jp/dictionary-api/v0/converter
 | [500]            | InternalServerError | サーバー側の設定ミスなどに起因するエラー。                                   |
 
 [error-schema.json]: error-schema.json
-[400]: http://www.hcn.zaq.ne.jp/___/WEB/RFC7231-ja.html#status.400
-[405]: http://www.hcn.zaq.ne.jp/___/WEB/RFC7231-ja.html#status.405
-[501]: http://www.hcn.zaq.ne.jp/___/WEB/RFC7231-ja.html#status.501
-[413]: http://www.hcn.zaq.ne.jp/___/WEB/RFC7231-ja.html#status.413
-[500]: http://www.hcn.zaq.ne.jp/___/WEB/RFC7231-ja.html#status.500
+[400]: https://triple-underscore.github.io/RFC7231-ja.html#status.400
+[405]: https://triple-underscore.github.io/RFC7231-ja.html#status.405
+[501]: https://triple-underscore.github.io/RFC7231-ja.html#status.501
+[413]: https://triple-underscore.github.io/RFC7231-ja.html#status.413
+[500]: https://triple-underscore.github.io/RFC7231-ja.html#status.500
 
 Contribution
 ------------
