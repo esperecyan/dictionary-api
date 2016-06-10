@@ -7,48 +7,73 @@
 </head>
 <body>
 	<h1><a href="https://github.com/esperecyan/dictionary-api/" target="_blank">主に単語で答えるゲームにおける汎用的な辞書形式に関するAPI</a> 動作デモ</h1>
-	
-	<form action="https://game.pokemori.jp/dictionary-api/v0/converter" method="POST" enctype="multipart/form-data">
+	<form action="https://game.pokemori.jp/dictionary-api/v0/converter" method="POST" enctype="multipart/form-data" id="form">
 		<input name="MAX_FILE_SIZE" type="hidden" value="2097152" />
 		<label>
-			変換する辞書
-			<input name="input" type="file" accept="text/plain,text/csv,application/zip,.cfq,.dat,.txt,.csv" required="" />
-			(最大 2MiB)
-		</label>
-		<label>
 			変換後の辞書のタイトル
-			<input name="title" />
+			<input name="title" disabled="" />
 			(省略可)
 		</label>
 		<label>
 			変換前の辞書の形式
-			<select name="from">
+			<select name="from" disabled="">
 				<option value="" selected="">自動判定</option>
 				<option>キャッチフィーリング</option>
 				<option>きゃっちま</option>
 				<option>Inteligenceω クイズ</option>
 				<option>Inteligenceω しりとり</option>
+				<option>ピクトセンス</option>
 				<option>汎用辞書</option>
 			</select>
 		</label>
-		<button>変換</button>
+		<label>
+			変換する辞書
+			<span>
+				<input name="input" type="file" required="" disabled="" />
+				(最大 2MiB)
+			</span>
+		</label>
+		<label>
+			変換後の辞書の形式
+			<select name="to" required="" disabled="">
+				<option>キャッチフィーリング</option>
+				<option>きゃっちま</option>
+				<option>Inteligenceω クイズ</option>
+				<option>Inteligenceω しりとり</option>
+				<option>ピクトセンス</option>
+				<option selected="">汎用辞書</option>
+			</select>
+		</label>
+		<button disabled="">変換</button>
 	</form>
 	
-	<p id="json">
-		エラーが発生した場合はJSONファイルが表示 (またはダウンロード) されます。
-	</p>
 	<p>
-		CSV (カンマ区切りの値) ファイルはExcelに関連付けられている場合がありますが、
-		これはMicrosoft Officeのバグのようなもので、実際は<strong>ExcelでCSVファイルを開くことはできません</strong>
-		(正確には<a href="http://www.7key.jp/rfc/rfc4180.html" target="_blank">RFC4180</a>に準拠したCSVファイル)。
-	</p>
-	<p>
+		<strong>汎用辞書 (*.csv) をExcelで開くとデータが壊れます。</strong>
 		CSVファイルを開く際は、<a href="https://ja.libreoffice.org/download/libreoffice-fresh/" target="_blank">LibreOffice</a>
 		(または<a href="http://www.forest.impress.co.jp/library/software/openoffice/" target="_blank">Apache OpenOffice</a>) の
-		表計算ソフト「Calc」など、CSVに対応したソフトをご利用ください。
-		Microsoft Officeをインストールしている場合は、
-		前述のようなのソフトをインストールする際に *.docx や *.xlsx などの関連付けが上書きされないようにご注意ください
-		(インストール時に「カスタム」を選び「ファイルの種類」でチェックをすべて外す) 。
+		Calcなど、CSVに対応したソフトをご利用ください。
+		なお、インストール時には *.docx や *.xlsx などの関連付けが上書きされないようにご注意ください。
 	</p>
+	
+	<p class="no-script"><strong>JavaScriptを有効にする必要があります。</strong></p>
+	
+	<output name="output" form="form" hidden="">
+	</output>
+	
+	<section id="parser-logs" hidden="">
+		<h1>読み込むときに発生した問題</h1>
+		<ol>
+		</ol>
+	</section>
+	
+	<section id="serializer-logs" hidden="">
+		<h1>変換するときに発生した問題</h1>
+		<ol>
+		</ol>
+	</section>
+	
+	<script src="./utilities.es"></script>
+	<script src="./polyfills.es"></script>
+	<script src="./script.es"></script>
 </body>
 </html>

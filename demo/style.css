@@ -6,3 +6,9 @@ form {
 	align-items: flex-start;
 	line-height: 2em;
 }
+
+.error,
+.no-script {
+	color: crimson;
+}
+
