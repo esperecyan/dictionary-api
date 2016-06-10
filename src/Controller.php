@@ -5,19 +5,53 @@ use esperecyan\dictionary_php\{Parser, Serializer};
 use esperecyan\dictionary_php\exception\{SyntaxException, SerializeExceptionInterface};
 use bantu\IniGetWrapper\IniGetWrapper;
 
-class Controller
+class Controller extends \Psr\Log\AbstractLogger
 {
+    /** @param string[][] */
+    protected $logs;
+    
+    public function log($level, $message, array $context = [])
+    {
+        $this->logs[] = [
+            'level' => $level,
+            'message' => $message,
+        ];
+    }
+    
     public function __construct()
     {
         header('access-control-allow-origin: *');
         if ($this->checkMethod($_SERVER['REQUEST_METHOD']) && ($file = $this->getInputFile())) {
             $parser = new Parser($this->getPostValue('from'), $_FILES['input']['name'], $this->getPostValue('title'));
+            $this->logs = [];
+            $parser->setLogger($this);
             try {
                 $dictionary = $parser->parse($file);
-                $outputFile = (new Serializer($this->getPostValue('to') ?? '汎用辞書'))->serialize($dictionary);
-                header("content-type: $outputFile[type]");
-                header('content-disposition: attachment; filename*=UTF-8\'\'' . rawurlencode($outputFile['name']));
-                echo $outputFile['bytes'];
+                $parserLogs = $this->logs;
+                
+                $serializer = new Serializer($this->getPostValue('to') ?? '汎用辞書');
+                $this->logs = [];
+                $serializer->setLogger($this);
+                $outputFile = $serializer->serialize($dictionary);
+                $serializerLogs = $this->logs;
+                
+                $formData = new xmlhttprequest\FormData();
+                $formData->append('output', $outputFile['bytes'], $outputFile['name'], $outputFile['type']);
+                if ($parserLogs) {
+                    $parserLogsFile = $this->convertLogsToFile($parserLogs, _('構文解析時に1つ以上のロギングが発生しました。'));
+                    $formData->append('parser-logs', $parserLogsFile['bytes'], null, $parserLogsFile['type']);
+                }
+                if ($serializerLogs) {
+                    $serializerLogsFile = $this->convertLogsToFile($serializerLogs, _('直列化時に1つ以上のロギングが発生しました。'));
+                    $formData->append(
+                        'serializer-logs',
+                        $serializerLogsFile['bytes'],
+                        null,
+                        $serializerLogsFile['type']
+                    );
+                }
+                header($formData->getContentType());
+                echo $formData->encode();
             } catch (SyntaxException $e) {
                 $this->responseError([
                     'type' => 'https://github.com/esperecyan/dictionary-api/blob/master/malformed-syntax.md',
@@ -179,5 +213,24 @@ class Controller
     {
         header('content-type: application/problem+json; charset=UTF-8', true, $problemdetail['status']);
         echo json_encode($problemdetail, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+    
+    /**
+     * ログをファイルに変換します。
+     * @param string[][] $logs
+     * @param string $detail
+     * @return string[]
+     */
+    protected function convertLogsToFile(array $logs, string $detail): array
+    {
+        return [
+            'bytes' => json_encode([
+                'type' => 'https://github.com/esperecyan/dictionary-api/blob/master/logs.md',
+                'title' => 'Logs',
+                'detail' => $detail,
+                'logs' => $logs,
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'type' => 'application/problem+json; charset=UTF-8',
+        ];
     }
 }

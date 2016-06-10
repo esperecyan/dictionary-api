@@ -35,6 +35,19 @@ https://game.pokemori.jp/dictionary-api/v0/converter
 | from  | 変換元の辞書形式。`キャッチフィーリング` `きゃっちま` `Inteligenceω クイズ` `Inteligenceω しりとり` `ピクトセンス` `汎用辞書` のいずれか。指定されていないか間違った値が指定されていれば、inputキーのファイル名から判断します。Inteligenceωについては、コメント行、空行を除く最初の行が `Q,` で始まるか否かで、クイズとしりとりを判別します。 |
 | to    | 変換先の辞書形式。`キャッチフィーリング` `きゃっちま` `Inteligenceω クイズ` `Inteligenceω しりとり` `ピクトセンス` `汎用辞書` のいずれか。指定されていないか間違った値が指定されていれば、`汎用辞書` になります。 |
 
+### レスポンス
+
+以下のパラメータがmultipart/form-data形式で返ります。
+
+| キー            | 値                                                                                         |
+|-----------------|--------------------------------------------------------------------------------------------|
+| output          | 辞書ファイル。`content-disposition` ヘッダの `filename*` パラメータにファイル名を含みます。|
+| parser-logs     | 構文解析時のログ。ログが存在しない場合はこのキーも存在しない。                             |
+| serializer-logs | 直列化時のログ。ログが存在しない場合はこのキーも存在しない。                               |
+
+ログはいずれも[application/problem+json]形式で問題点の一覧を返します。
+拡張メンバの構造については https://github.com/esperecyan/dictionary-api/blob/master/logs.md をご覧ください。
+
 ### エラー
 4xxクラス、または5xxクラスのHTTPステータスコード、および[application/problem+json]形式でエラーの説明を返します。
 

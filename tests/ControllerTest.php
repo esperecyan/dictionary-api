@@ -10,6 +10,15 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
     const CONTENT_LENGTH_DUMMY = 512;
     
     /**
+     * @param string $str
+     * @return string
+     */
+    public function quote(string $str): string
+    {
+        return '"' . addcslashes(str_replace(["\r\n", "\r", "\n"], ' ', explode("\0", $str, 2)[0]), '"\\') . '"';
+    }
+    
+    /**
      * @param string $binary
      * @return \ZipArchive
      */
@@ -49,6 +58,8 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
      * @param string $contentType
      * @param string|null $from
      * @param string|null $to
+     * @param string[] $parserLogLevels
+     * @param string[] $serializerLogLevels
      * @dataProvider dictionaryProvider
      */
     public function testConstruct(
@@ -58,8 +69,11 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
         string $outputFilePath,
         string $contentType,
         string $from = null,
-        string $to = null
+        string $to = null,
+        array $parserLogLevels = [],
+        array $serializerLogLevels = []
     ) {
+        // リクエストの構築
         if ($from) {
             $_POST['from'] = $from;
         }
@@ -77,29 +91,81 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
         $_SERVER['CONTENT_LENGTH'] = $inputFile->getSize();
         $_SERVER['REQUEST_METHOD'] = 'POST';
         
-        if ($contentType === 'application/zip') {
-            ob_start();
-            new Controller();
-            if (http_response_code()) {
-                $this->fail(ob_get_clean());
-            }
-            
-            $archive = $this->generateArchive(ob_get_clean());
-            $this->assertStringEqualsFile(
-                __DIR__ . "/resources/$outputFilePath",
-                $archive->getFromName('dictionary.csv')
-            );
-        } else {
-            $this->expectOutputString(file_get_contents(__DIR__ . "/resources/$outputFilePath"));
-            new Controller();
+        // レスポンス本体の取得
+        ob_start();
+        new Controller();
+        $responseBody = ob_get_clean();
+        if (http_response_code()) {
+            $this->fail($responseBody);
         }
+        
+        // レスポンスヘッダの取得
+        $headers = xdebug_get_headers();
+        foreach ($headers as $header) {
+            if (stripos($header, 'content-type') === 0) {
+                $contentTypeHeader = $header;
+                break;
+            }
+        }
+        if (empty($contentTypeHeader) || stripos($contentTypeHeader, 'multipart/form-data') === false) {
+            $this->fail(print_r($headers, true));
+        }
+        
+        // multipart/form-dataの構文解析
+        $formData = new \Riverline\MultiPartParser\Part("$contentTypeHeader\r\n\r\n$responseBody");
+        if (!$formData->isMultiPart()) {
+            $this->fail("$contentTypeHeader\r\n\r\n$responseBody");
+        }
+        $output = $formData->getPartsByName('output')[0];
+        
+        // outputの確認
+        preg_match('/charset=([^; ]+)/u', $output->getHeader('content-type'), $charset);
+        $this->assertStringEqualsFile(
+            __DIR__ . "/resources/$outputFilePath",
+            $contentType === 'application/zip'
+                ? $this->generateArchive($output->getBody())->getFromName('dictionary.csv')
+                : mb_convert_encoding(
+                    rtrim($output->getBody(), "\r"), // riverline/multipart-parserは末尾にCRが付く不具合有り
+                    $charset[1],
+                    'UTF-8'
+                ) // riverline/multipart-parserによって自動的にUTF-8に変換される
+        );
 
         $this->assertSame(200, http_response_code() ?: 200);
-        $this->assertArraySubsetWithoutKey([
-            'access-control-allow-origin: *',
-            "content-type: $contentType",
-            'content-disposition: attachment; filename*=UTF-8\'\'' . rawurlencode($outputFilename),
-        ], xdebug_get_headers());
+        $this->assertContains('access-control-allow-origin: *', $headers);
+        $this->assertEquals([
+            'content-type' => $contentType,
+            'content-disposition' => mb_decode_mimeheader(
+                'form-data; name="output"; filename=' . $this->quote($outputFilename)
+            ), // riverline/multipart-parser内部でmb_decode_mimeheader()が利用されているために文字化けが発生する
+        ], $output->getHeaders());
+        
+        // parser-logsの確認
+        $parserLogses = $formData->getPartsByName('parser-logs');
+        if ($parserLogses) {
+            $this->assertSame('application/problem+json; charset=UTF-8', $parserLogses[0]->getHeader('content-type'));
+            $parserLogs = json_decode($parserLogses[0]->getBody())->logs;
+        } else {
+            $parserLogs = [];
+        }
+        $this->assertEquals($parserLogLevels, array_column($parserLogs, 'level'), print_r($parserLogs, true));
+        
+        // serializer-logsの確認
+        $serializerLogses = $formData->getPartsByName('serializer-logs');
+        if ($serializerLogses) {
+            $this->assertSame(
+                'application/problem+json; charset=UTF-8',
+                $serializerLogses[0]->getHeader('content-type')
+            );
+            $serializerLogs = json_decode($serializerLogses[0]->getBody())->logs;
+        } else {
+            $serializerLogs = [];
+        }
+        $this->assertEquals(
+            $serializerLogLevels,
+            array_column($serializerLogs, 'level'),
+            print_r($serializerLogs, true)
+        );
     }
     
     public function dictionaryProvider(): array
@@ -111,6 +177,10 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 '漢字.csv',
                 'catchfeeling/kanji-output.csv',
                 'text/csv; charset=UTF-8; header=present',
+                null,
+                null,
+                [],
+                [],
             ],
             [
                 '純粋な東方キャラ大辞典 ver.5 [語数 191] [作成者 幽燐, 100の人].cfq',
@@ -118,6 +188,10 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 '純粋な東方キャラ大辞典 ver．5.csv',
                 'catchfeeling/touhou-output.csv',
                 'text/csv; charset=UTF-8; header=present',
+                null,
+                null,
+                [],
+                [],
             ],
             [
                 '純粋な東方キャラ大辞典 ver.5 [語数 191] [作成者 幽燐, 100の人].cfq',
@@ -127,6 +201,8 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 'text/csv; charset=UTF-8; header=absent',
                 null,
                 'ピクトセンス',
+                [],
+                [],
             ],
             [
                 '英単語 [語数 26] [作成者 100の人].cfq',
@@ -134,6 +210,10 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 '英単語.csv',
                 'catchfeeling/english-output.csv',
                 'text/csv; charset=UTF-8; header=present',
+                null,
+                null,
+                [],
+                [],
             ],
             [
                 '純粋な東方キャラ大辞典 ver.5 [語数 191] [作成者 幽燐, 100の人].dat',
@@ -141,6 +221,10 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 '純粋な東方キャラ大辞典 ver．5 [語数 191] [作成者 幽燐, 100の人].csv',
                 'catchm/touhou-output.csv',
                 'text/csv; charset=UTF-8; header=present',
+                null,
+                null,
+                [],
+                [],
             ],
             [
                 '純粋な東方キャラ大辞典 ver.5 [語数 191] [作成者 幽燐, 100の人].dat',
@@ -150,6 +234,8 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 'text/plain; charset=Shift_JIS',
                 null,
                 'キャッチフィーリング',
+                [],
+                [],
             ],
             [
                 'しりとりサンプル.txt',
@@ -157,6 +243,10 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 'しりとりサンプル.csv',
                 'inteligenceo/shiritori-output.csv',
                 'text/csv; charset=UTF-8; header=present',
+                null,
+                null,
+                [],
+                [],
             ],
             [
                 'クイズサンプル.txt',
@@ -164,6 +254,10 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 'クイズサンプル.csv',
                 'inteligenceo/quiz-output.csv',
                 'text/csv; charset=UTF-8; header=present',
+                null,
+                null,
+                [],
+                [],
             ],
             [
                 'クイズサンプル.txt',
@@ -173,6 +267,8 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 'text/plain; charset=Shift_JIS',
                 null,
                 'Inteligenceω しりとり',
+                [],
+                ['error', 'error', 'error', 'error', 'error'],
             ],
             [
                 'ファイル形式.csv',
@@ -180,6 +276,10 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 'ファイル形式.zip',
                 'generic-dictionary/formats-output-dictionary.csv',
                 'application/zip',
+                null,
+                null,
+                [],
+                [],
             ],
             [
                 '東方原曲 (紅魔郷〜紺珠伝) ※CD限定の曲は含まず.txt',
@@ -188,6 +288,31 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 'pictsense/touhou-musics-output.csv',
                 'text/csv; charset=UTF-8; header=present',
                 'ピクトセンス',
+                null,
+                [],
+                [],
+            ],
+            [
+                '東方原曲 (紅魔郷〜紺珠伝) ※CD限定の曲は含まず.csv',
+                'pictsense/touhou-musics-input.csv',
+                '東方原曲 (紅魔郷〜紺珠伝) ※CD限定の曲は含まず.csv',
+                'pictsense/touhou-musics-input.csv',
+                'text/csv; charset=UTF-8; header=absent',
+                null,
+                'ピクトセンス',
+                [],
+                [],
+            ],
+            [
+                'dictionary.csv',
+                'generic-dictionary/english-input-output.csv',
+                '英単語.csv',
+                'generic-dictionary/english-input-output.csv',
+                'text/csv; charset=UTF-8; header=present',
+                null,
+                null,
+                ['warning', 'warning', 'warning'],
+                [],
             ],
         ];
     }
@@ -217,7 +342,7 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
         } else {
             new Controller();
         }
-        $this->assertSame($status, http_response_code() ?: 200);
+        $this->assertSame($status, http_response_code() ?: 200, ob_get_contents());
         $this->assertArraySubsetWithoutKey([
             'access-control-allow-origin: *',
             'content-type: application/problem+json; charset=UTF-8',
@@ -322,10 +447,6 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
     public function malformedSyntaxProvider(): array
     {
         return [
-            [
-                '../composer.json',
-                'dictionary.zip',
-            ],
             [
                 '../phpunit.xml',
                 'dictionary.xml',

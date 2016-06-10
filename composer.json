@@ -24,6 +24,8 @@
 	},
 	"require-dev": {
 		"phpunit/phpunit": "^4.8.26",
+		"riverline/multipart-parser": "^1.1.8",
+		"h4cc/multipart": "@dev",
 		"ext-xdebug": "*",
 		"ext-SPL": "*",
 		"ext-zip": "*"
