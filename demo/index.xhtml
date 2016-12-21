@@ -14,18 +14,18 @@
 			<input name="title" disabled="" />
 			(省略可)
 		</label>
-		<label>
+		<div>
 			変換前の辞書の形式
-			<select name="from" disabled="">
-				<option value="" selected="">自動判定</option>
-				<option>キャッチフィーリング</option>
-				<option>きゃっちま</option>
-				<option>Inteligenceω クイズ</option>
-				<option>Inteligenceω しりとり</option>
-				<option>ピクトセンス</option>
-				<option>汎用辞書</option>
-			</select>
-		</label>
+			<ul>
+				<li><label><input name="from" value="" type="radio" checked="" disabled="" />自動判定</label></li>
+				<li><label><input name="from" value="キャッチフィーリング" type="radio" disabled="" />キャッチフィーリング</label></li>
+				<li><label><input name="from" value="きゃっちま" type="radio" disabled="" />きゃっちま</label></li>
+				<li><label><input name="from" value="Inteligenceω クイズ" type="radio" disabled="" />Inteligenceω クイズ</label></li>
+				<li><label><input name="from" value="Inteligenceω しりとり" type="radio" disabled="" />Inteligenceω しりとり</label></li>
+				<li><label><input name="from" value="ピクトセンス" type="radio" disabled="" />ピクトセンス</label></li>
+				<li><label><input name="from" value="汎用辞書" type="radio" disabled="" />汎用辞書</label></li>
+			</ul>
+		</div>
 		<label>
 			変換する辞書
 			<span>
@@ -33,17 +33,17 @@
 				(最大 2MiB)
 			</span>
 		</label>
-		<label>
+		<div>
 			変換後の辞書の形式
-			<select name="to" required="" disabled="">
-				<option>キャッチフィーリング</option>
-				<option>きゃっちま</option>
-				<option>Inteligenceω クイズ</option>
-				<option>Inteligenceω しりとり</option>
-				<option>ピクトセンス</option>
-				<option selected="">汎用辞書</option>
-			</select>
-		</label>
+			<ul>
+				<li><label><input name="to" value="キャッチフィーリング" required="" type="radio" disabled="" />キャッチフィーリング</label></li>
+				<li><label><input name="to" value="きゃっちま" required="" type="radio" disabled="" />きゃっちま</label></li>
+				<li><label><input name="to" value="Inteligenceω クイズ" required="" type="radio" disabled="" />Inteligenceω クイズ</label></li>
+				<li><label><input name="to" value="Inteligenceω しりとり" required="" type="radio" disabled="" />Inteligenceω しりとり</label></li>
+				<li><label><input name="to" value="ピクトセンス" required="" type="radio" disabled="" />ピクトセンス</label></li>
+				<li><label><input name="to" value="汎用辞書" required="" type="radio" checked="" disabled="" />汎用辞書</label></li>
+			</ul>
+		</div>
 		<button disabled="">変換</button>
 	</form>
 	

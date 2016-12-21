@@ -7,6 +7,19 @@ form {
 	line-height: 2em;
 }
 
+ul {
+	display: inline;
+	padding-left: 0;
+}
+
+ul li {
+	display: inline;
+}
+
+label[title] {
+	color: gray;
+}
+
 .error,
 .no-script {
 	color: crimson;

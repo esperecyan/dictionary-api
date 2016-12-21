@@ -8,11 +8,14 @@ if ('fetch' in window) {
 		formControl.disabled = false;
 	}
 	
-	let toInteligenceoQuiz = Array.from(form.to).find(option => option.value === 'Inteligenceω クイズ');
+	let toInteligenceoQuiz = Array.from(form.to).find(radioButton => radioButton.value === 'Inteligenceω クイズ');
 	let inputFile = form.input.parentElement;
 	let inputText;
 	
-	form.from.addEventListener('change', function (event) {
+	form.addEventListener('change', function (event) {
+		if (event.target.name !== 'from') {
+			return;
+		}
 		switch (event.target.value) {
 			case '自動判定':
 				form.input.accept = 'text/plain,text/csv,application/zip,.cfq,.dat,.txt,.csv';
@@ -49,12 +52,12 @@ if ('fetch' in window) {
 		
 		toInteligenceoQuiz.disabled = !['', 'Inteligenceω クイズ', '汎用辞書'].includes(event.target.value);
 		if (toInteligenceoQuiz.disabled) {
-			toInteligenceoQuiz.title = '指定した辞書形式からInteligenceω クイズへは変換できません。'
+			toInteligenceoQuiz.parentElement.title = '指定した辞書形式からInteligenceω クイズへは変換できません。'
 		} else {
-			toInteligenceoQuiz.removeAttribute('title');
+			toInteligenceoQuiz.parentElement.removeAttribute('title');
 		}
 	});
-	form.from.dispatchEvent(new Event('change'));
+	form.querySelector('[name="from"]:checked').dispatchEvent(new Event('change', {bubbles: true}));
 	
 	form.addEventListener('submit', function (event) {
 		event.preventDefault();
