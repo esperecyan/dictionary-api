@@ -21,7 +21,7 @@ label[title] {
 }
 
 .error,
-.no-script {
+.no-script strong {
 	color: crimson;
 }
 

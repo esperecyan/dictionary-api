@@ -1,7 +1,12 @@
 'use strict';
 
 let noScript = document.getElementsByClassName('no-script')[0];
-if ('fetch' in window) {
+let strong = noScript.getElementsByTagName('strong')[0];
+if (!('fetch' in window)) {
+	strong.textContent = 'ご利用中のブラウザは WindowOrWorkerGlobalScope#fetch() に対応していません。';
+} else if (!('formData' in Response.prototype)) {
+	strong.textContent = 'ご利用中のブラウザは Body#formData() に対応していません。';
+} else {
 	noScript.remove();
 	let form = document.forms[0];
 	for (let formControl of Array.from(form)) {
@@ -137,6 +142,4 @@ if ('fetch' in window) {
 		});
 	});
 	
-} else {
-	noScript.firstElementChild.textContent = 'ご利用中のブラウザは WindowOrWorkerGlobalScope#fetch() に対応していません。';
 }
