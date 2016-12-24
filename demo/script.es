@@ -4,11 +4,14 @@ let noScript = document.getElementsByClassName('no-script')[0];
 let strong = noScript.getElementsByTagName('strong')[0];
 if (!('fetch' in window)) {
 	strong.textContent = 'ご利用中のブラウザは WindowOrWorkerGlobalScope#fetch() に対応していません。';
-} else if (!('formData' in Response.prototype)) {
-	strong.textContent = 'ご利用中のブラウザは Body#formData() に対応していません。';
 } else {
-	noScript.remove();
 	let form = document.forms[0];
+	if (!form.output) {
+		// For Microsoft Edge
+		form.output = document.querySelector('[name="output"][form="form"]');
+	}
+	noScript.remove();
+	
 	for (let formControl of Array.from(form)) {
 		formControl.disabled = false;
 	}
@@ -134,6 +137,7 @@ if (!('fetch' in window)) {
 		}).then(function () {
 			submitButton.disabled = false;
 		}).catch(function (error) {
+			console.error(error);
 			event.target.output.innerHTML = h`<strong><span class="error">エラーが発生しました。</span><br /><pre>${error}</pre></strong>`;
 			event.target.output.hidden = false;
 			document.getElementById('parser-logs').hidden = true;
