@@ -1,7 +1,7 @@
 <?php
 namespace esperecyan\dictionary_api\xmlhttprequest;
 
-class FormDataTest extends \PHPUnit_Framework_TestCase
+class FormDataTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @param string[][] $formDataSet

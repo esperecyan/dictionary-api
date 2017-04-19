@@ -1,0 +1,2 @@
+text,audio,description,specifics,question,@title
+サンプル,sanpu-ru.mp3,音楽ファイルは絶対パスでも相対パスでもＯＫです。ただし、ファイルがないと出題時にエラーとなります。,start=0&bonus=5,何の曲でしょう？,クイズサンプル

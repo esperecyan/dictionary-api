@@ -5,11 +5,8 @@
 * [主に単語で答えるゲームにおける汎用的な辞書形式] \(以下、汎用辞書形式)
 * [キャッチフィーリング]、[Drawing Catch] \(*.cfq)
 * [きゃっちま] \(*.dat) ※暗号化後のファイルは扱えません
-* [Inteligenceω] \(*.txt) ※暗号化後のファイルは扱えません
+* [Inteligenceω] \(*.txt, *.zip) ※暗号化後のファイルは扱えません
 * [ピクトセンス]
-
-Inteligenceωの辞書で画像・音声ファイルへのパスが含まれる場合、単にファイル名を抽出します。
-当APIでは、Inteligenceωの辞書と画像・音声ファイルをまとめて扱うことはできません。
 
 [主に単語で答えるゲームにおける汎用的な辞書形式]: https://github.com/esperecyan/dictionary/blob/master/dictionary.md
 [キャッチフィーリング]: http://forest.watch.impress.co.jp/library/software/catchfeeling/

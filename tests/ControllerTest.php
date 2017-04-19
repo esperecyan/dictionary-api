@@ -4,11 +4,8 @@ namespace esperecyan\dictionary_api;
 /**
  * @runTestsInSeparateProcesses
  */
-class ControllerTest extends \PHPUnit_Framework_TestCase
+class ControllerTest extends \PHPUnit\Framework\TestCase
 {
-    /** @var int $_SERVER['CONTENT_LENGTH']未設定時の値。 */
-    const CONTENT_LENGTH_DUMMY = 512;
-    
     /**
      * @param string $str
      * @return string
@@ -255,6 +252,17 @@ class ControllerTest extends \PHPUnit_Framework_TestCase
                 'inteligenceo/quiz-output.csv',
                 'text/csv; charset=UTF-8; header=present',
                 null,
+                null,
+                [],
+                [],
+            ],
+            [
+                'クイズサンプル.zip',
+                'inteligenceo/quiz-input.zip',
+                'クイズサンプル.zip',
+                'inteligenceo/quiz-output-zip.csv',
+                'application/zip',
+                'Inteligenceω クイズ',
                 null,
                 [],
                 [],
