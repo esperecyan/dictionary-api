@@ -1,4 +1,0 @@
-[submodule "gh-pages"]
-	path = gh-pages
-	url = https://github.com/esperecyan/dictionary-api.git
-	branch = gh-pages
