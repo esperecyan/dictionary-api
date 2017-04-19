@@ -12,7 +12,7 @@
 		<label>
 			変換後の辞書のタイトル
 			<input name="title" disabled="" />
-			(省略可)
+			<small>(省略可)</small>
 		</label>
 		<div>
 			変換前の辞書の形式
@@ -25,12 +25,13 @@
 				<li><label><input name="from" value="ピクトセンス" type="radio" disabled="" />ピクトセンス</label></li>
 				<li><label><input name="from" value="汎用辞書" type="radio" disabled="" />汎用辞書</label></li>
 			</ul>
+			<small>変換する辞書としてZIPファイルを選択した場合、「自動判定」では「汎用辞書」として扱われます。「Inteligenceω クイズ」の場合は明示的に指定してください。</small>
 		</div>
 		<label>
 			変換する辞書
 			<span>
 				<input name="input" type="file" required="" disabled="" />
-				(最大 2MiB)
+				<small>(最大 2MiB)</small>
 			</span>
 		</label>
 		<div>

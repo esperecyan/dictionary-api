@@ -35,7 +35,7 @@ if (!('fetch' in window)) {
 				form.input.accept = '.dat';
 				break;
 			case 'Inteligenceω クイズ':
-				form.input.accept = '.txt';
+				form.input.accept = '.txt,application/zip';
 				break;
 			case 'Inteligenceω しりとり':
 				form.input.accept = '';

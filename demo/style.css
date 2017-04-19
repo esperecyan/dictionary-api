@@ -20,6 +20,14 @@ label[title] {
 	color: gray;
 }
 
+small {
+	color: grey;
+}
+div > small {
+	display: block;
+	margin-left: 5em;
+}
+
 .error,
 .no-script strong {
 	color: crimson;
