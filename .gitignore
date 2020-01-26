@@ -1,6 +1,9 @@
 
 gh-pages/
 
+### PHPUnit ###
+.phpunit.result.cache
+
 # Created by https://www.gitignore.io/api/windows,netbeans,composer,libreoffice
 
 ### Windows ###
