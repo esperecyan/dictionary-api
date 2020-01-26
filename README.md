@@ -9,10 +9,10 @@
 * [ピクトセンス]
 
 [主に単語で答えるゲームにおける汎用的な辞書形式]: https://github.com/esperecyan/dictionary/blob/master/dictionary.md
-[キャッチフィーリング]: http://forest.watch.impress.co.jp/library/software/catchfeeling/
-[Drawing Catch]: http://www.houmotsuko.net/game/old/drawcatch/index
+[キャッチフィーリング]: https://forest.watch.impress.co.jp/library/software/catchfeeling/
+[Drawing Catch]: https://www.houmotsuko.net/game/old/drawcatch/index
 [きゃっちま]: http://vodka-catchm.seesaa.net/article/115922159.html
-[ピクトセンス]: http://pictsense.com/
+[ピクトセンス]: https://pictsense.com/
 [Inteligenceω]: http://loxee.web.fc2.com/inteli.html
 
 動作デモ
